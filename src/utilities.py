@@ -1,3 +1,11 @@
+"""
+utilities
+
+File that contains utilities for algorithms which consist of:
+graph_class: Class that represents graph data structure
+priority_queue: priority queue implemented using built-in heapq class
+"""
+
 import heapq
 
 class graph_class:
@@ -41,6 +49,12 @@ class graph_class:
         return adjacency_matrix
 
     def get_edge_weight(self, node_1, node_2):
+        """
+        Getter method for edge weight given two nodes
+        :param node_1:
+        :param node_2:
+        :return:
+        """
         return self.adjacency_matrix[self.nodes
                                    .index(node_1)][self.nodes
                                    .index(node_2)]
@@ -50,10 +64,26 @@ class priority_queue:
         self.queue = []
 
     def is_empty(self):
+        """
+        Method to check if queue is empty
+        :return: void
+        """
         return len(self.queue) == 0
 
     def insert(self, weight, node_1, node_2):
+        """
+        Method to insert edges in queue.
+        :param weight: weight of edge
+        :param node_1: start node
+        :param node_2: end node
+        :return: void
+        """
         heapq.heappush(self.queue, (weight, node_1, node_2))
 
     def dequeue(self):
+        """
+        Method to dequeue element with highets priority, in this case the
+        lowest weight.
+        :return:
+        """
         return self.queue.pop(0)

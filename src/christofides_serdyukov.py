@@ -1,8 +1,20 @@
+"""
+christofides_serdyukov
+
+Implementation of christofides_serdyukov algorithm. THe
+"""
+
 from utilities import graph_class
 from utilities import priority_queue
 import networkx as nx
 
+
 def prims_algorithm(graph):
+    """
+    Prim's Algorithm
+    :param graph: graph from graph utilities
+    :return: graph with mst edges
+    """
 
     # keep set of visited nodes
     visited = []
@@ -48,7 +60,14 @@ def prims_algorithm(graph):
     mst_obj = graph_class(graph.nodes, mst_edges)
     return mst_obj
 
+
 def find_odd_degree(mst, graph):
+    """
+    Find nodes with odd degrees in a given minimum spanning tree
+    :param mst: minimum spanning tree
+    :param graph: Original fully connected graph
+    :return:
+    """
     odd_nodes = []
 
     for row in range(len(mst.nodes)):
@@ -59,26 +78,34 @@ def find_odd_degree(mst, graph):
         if sum_degrees % 2 == 1:
             odd_nodes.append(mst.nodes[row])
 
-    # create sub graph containing only odd nodes
+    # create sub graph containing only odd nodes, note still need edges
+    # from original graph
     number_odd_nodes = len(odd_nodes)
     odd_edges = []
 
     for i in range(number_odd_nodes):
         for j in range(i + 1, number_odd_nodes):
             odd_edges.append((odd_nodes[i], odd_nodes[j], -1 *
-                               graph.get_edge_weight(odd_nodes[i],
-                                                     odd_nodes[j])))
+                              graph.get_edge_weight(odd_nodes[i],
+                                                    odd_nodes[j])))
 
     return graph_class(odd_nodes, odd_edges)
 
-def find_minimum_matching_and_eulerian_tour(mst, graph):
 
+def find_minimum_matching_and_eulerian_tour(mst, graph):
+    """
+    Method to find minimum matching graphs and eulerian tour.
+    This method uses the package networkx.
+    :param mst: minimum spanning tree
+    :param graph: original fully connected graph
+    :return: eurlerian tour
+    """
     # create networkx graph
     odd_graph_nx = nx.Graph()
     odd_subgraph = find_odd_degree(mst, graph)
     odd_graph_nx.add_weighted_edges_from(odd_subgraph.edges)
 
-    #odd_graph_nx.add_weighted_edges_from(graph.edges)
+    # odd_graph_nx.add_weighted_edges_from(graph.edges)
 
     matching = list(nx.max_weight_matching(odd_graph_nx,
                                            maxcardinality=True))
@@ -100,7 +127,13 @@ def find_minimum_matching_and_eulerian_tour(mst, graph):
 
     return eulerian_tour
 
+
 def christofides_serdyukov_algorithm(graph):
+    """
+    Implementation of christofides-serdyukov algorithm
+    :param graph: fully connected graph
+    :return: edges of calculated tour and weight of tour
+    """
     # use prim's algorithm to find mst of graph
     mst = prims_algorithm(graph)
 
@@ -122,12 +155,3 @@ def christofides_serdyukov_algorithm(graph):
         tsp_tour_edge.append((node_1, node_2))
         total_weight += graph.get_edge_weight(node_1, node_2)
     return tsp_tour_edge, total_weight
-
-test1 = graph_class([0, 1, 2, 3, 4], [(0,1,2), (0,3,6), (1, 2, 3), (1,3,8), (1,4,5), (2,4,7), (3,4,9)])
-test2 = graph_class(["A", "B", "C"], [("A", "B", 5), ("A", "C", 3)])
-test3 = graph_class([1, 2, 3, 4], [(1, 2, 10), (1, 4, 20), (1, 3, 15), (2, 4, 25), (2, 3, 35), (3, 4, 30)])
-test4 = graph_class([1, 2, 3, 4, 5], [(1, 2, 12), (1, 4, 19), (1, 3, 10), (1, 5, 8), (2, 3, 3), (2, 4, 7), (2, 5, 2), (3, 4, 6), (3, 5, 20), (4, 5, 4)])
-# print(christofides_serdyukov_algorithm(test3))
-# print(christofides_serdyukov_algorithm(test4))
-# mst_test3 = prims_algorithm(test3)
-mst_test4 = prims_algorithm(test4)

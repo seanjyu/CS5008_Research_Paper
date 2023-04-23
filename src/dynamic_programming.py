@@ -1,8 +1,19 @@
+"""
+dynmic_programming
+
+Implementation of dynamic programming algorithm to solve for the travelling
+salesman problem. The
+"""
+
 from utilities import graph_class
 import sys
 
 class dynamic_programming:
     def __init__(self, graph):
+        """
+        Initialize object
+        :param graph: graph class from utilities
+        """
         self.adjacency_matrix = graph.adjacency_matrix
         self.min_tour_cost = sys.maxsize
         self.run_solver = False
@@ -14,10 +25,20 @@ class dynamic_programming:
 
 
     def get_min_tour_cost(self):
+        """
+        Getter method for min_tour_cost
+        :return: int representing min tour cost
+        """
         return self.min_tour_cost
-    
+
     def solve(self):
-        if self.run_solver == True:
+        """
+        method to solve travelling salesman problem using dynamic
+        programming
+        :return: void
+        """
+        # if solver already run then just return
+        if self.run_solver:
             return
 
         # define final state
@@ -90,13 +111,28 @@ class dynamic_programming:
         self.min_tour.append(0)
         self.run_solver = True
 
+
     def combinations(self, r, n):
+        """
+        method to call recursive function and output combinations
+        :param r: current number of nodes
+        :param n: total number of nodes
+        :return: list of subsets represtented by binary number
+        """
         self.subsets = []
         self.recursive_combinations(0, 0, r, n, self.subsets)
         return self.subsets
 
     def recursive_combinations(self, set, at, r, n, subsets):
-
+        """
+        Recursive function to find combinations
+        :param set: current set
+        :param at: current node
+        :param r: number of nodes
+        :param n: total number of nodes
+        :param subsets: list of subsets
+        :return: void
+        """
         # if no more elements to add return
         if n - at < r:
             return
@@ -111,16 +147,13 @@ class dynamic_programming:
 
                 self.recursive_combinations(set, i + 1, r - 1, n, subsets)
 
-                set ^= (1 << i);
+                set ^= (1 << i)
 
     def bit_not_in(self, node, subset):
-        return ((1 << node) & subset) == 0;
-
-test3 = graph_class([1, 2, 3, 4], [(1, 2, 10), (1, 4, 20), (1, 3, 15), (2, 4, 25), (2, 3, 35), (3, 4, 30)])
-test4 = graph_class([1, 2, 3, 4, 5], [(1, 2, 12), (1, 4, 19), (1, 3, 10), (1, 5, 8), (2, 3, 3), (2, 4, 7), (2, 5, 2), (3, 4, 6), (3, 5, 20), (4, 5, 4)])
-
-a = dynamic_programming(test3)
-b = dynamic_programming(test4)
-a.solve()
-b.solve()
-print(a.min_tour_cost, b.min_tour_cost)
+        """
+        Check if node is in set that is represented by binary number
+        :param node:
+        :param subset:
+        :return:
+        """
+        return ((1 << node) & subset) == 0
