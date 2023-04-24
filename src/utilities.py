@@ -18,12 +18,6 @@ class graph_class:
         """
         self.nodes = nodes
         self.edges = edges
-        # create dictionary of neighbors, will be populated when adjacency
-        # list is created.
-        # neighbor_dict = {}
-        # for node in nodes:
-        #     neighbor_dict[node] = []
-        # self.neighbors = neighbor_dict
         self.adjacency_matrix = self.create_adjacency_matrix(nodes, edges)
 
 

@@ -1,7 +1,7 @@
 # CS5008_Research_Paper
 Research Paper on Algorithms for the Travelling Salesman Problem 
 
-## <ins>Problem Definition</ins>
+
 
 The travelling salesman problem (TSP) can be stated as follows:
 
@@ -91,7 +91,8 @@ F(graph):
 	# Parse through solution list to find minimum weight (linear time)
 	return min(solution)
 ```
-To paraphrase the method behind this algorithm is to find every single permutation and then find the minimum cost out of all the found solutions. The time and space complexity of this algorithm are both $\mathcal{O}(n!)$. 
+
+To summarize the method behind this algorithm is to find every single permutation and then find the minimum cost out of all the found solutions. The time complexity of this algorithm is $\mathcal{O}(n!)$ and the space complexity depends on how the tour is stored, if a binary representation is used then the space complexity is only $\mathcal{O}(n\log n)$. The worst case space complexity is polynomial.
 
 #### <ins>Dynamic Programming Algorithm</ins>
 
@@ -260,20 +261,106 @@ F(graph):
 ```
 
 ## Summary of Algorithms
-Below is a summary table of the different complexities of the three algorithms.
 
+Below is a summary table of the different complexities of the three algorithms.
+|  | Time<br>Complexity | Space<br>Complexity |
+|---|---|---|
+| Brute Force | $\mathcal{O}(n!)$ | $\mathcal{O}(n\log n)$ |
+| Dynamic Programming | $\mathcal{O}(n2^{n})$ | $\mathcal{O}(n2^{n})$ |
+| Christofides-Serdyukov Algorithm | $\mathcal{O}(En^{2})$ | $\mathcal{O}(n^{2})$ |
+
+From this table, the Christofides-Serdyukov algorithm should be much faster than the dynamic programming and brute force algorithm. But the latter two are guaranteed to give optimal solutions.
 
 
 ## Code Implementation
 
 #### <ins>Utility Classes</ins>
 
-Two utility classes were created to help store facilitate the data structures. Note
+Two utility classes were created to help store facilitate the data structures. Namely a graph data structure and a priority queue data structure. The priority queue data structure was used in prim's algorithm. Due to time constraints, the built-in function heapq was used. 
 
+```python
+import heapq
+
+class graph_class:
+    def __init__(self, nodes, edges):
+        """
+        Initialize graph class object.
+        :param nodes: List of strings that represent nodes
+        :param edges: List of tuples in the format of
+        (node name (string), node name (string), weight (integer))
+        """
+        self.nodes = nodes
+        self.edges = edges
+        self.adjacency_matrix = self.create_adjacency_matrix(nodes, edges)
+
+
+    def create_adjacency_matrix(self, nodes, edges):
+        """
+        Method to create adjacency matrix
+        :param nodes:
+        :param edges:
+        :return: 2D list representing adjacency matrix
+        """
+        # create empty 2D adjacency matrix
+        # Note need to use for loop to create new list objects
+        adjacency_matrix = [[0 for i in range(len(nodes))]
+                            for i in range(len(nodes))]
+
+        # Loop through the list of edges and assign values to 2D adjacency
+        # matrix then update neighbor dictionary.
+        for edge in edges:
+            index_1 = nodes.index(edge[0])
+            index_2 = nodes.index(edge[1])
+            adjacency_matrix[index_1][index_2] = edge[2]
+            adjacency_matrix[index_2][index_1] = edge[2]
+        return adjacency_matrix
+
+    def get_edge_weight(self, node_1, node_2):
+        """
+        Getter method for edge weight given two nodes
+        :param node_1:
+        :param node_2:
+        :return:
+        """
+        return self.adjacency_matrix[self.nodes
+                                   .index(node_1)][self.nodes
+                                   .index(node_2)]
+
+class priority_queue:
+    def __init__(self):
+        self.queue = []
+
+    def is_empty(self):
+        """
+        Method to check if queue is empty
+        :return: void
+        """
+        return len(self.queue) == 0
+
+    def insert(self, weight, node_1, node_2):
+        """
+        Method to insert edges in queue.
+        :param weight: weight of edge
+        :param node_1: start node
+        :param node_2: end node
+        :return: void
+        """
+        heapq.heappush(self.queue, (weight, node_1, node_2))
+
+    def dequeue(self):
+        """
+        Method to dequeue element with highets priority, in this case the
+        lowest weight.
+        :return:
+        """
+        return self.queue.pop(0)
+        
+```
 
 #### <ins>Brute Force Algorithm</ins>
 
 In general the code implementation follows closely to the pseudocode. This implementation was also inspired by a Leetcode solution<sup>12</sup>  but is heavily adapted for solving the traveling salesman problem. Note in this implementation the weight is calculated during the brute force process such that the optimal permutation does not have to be traversed just to find the optimal weight. 
+
 ```python
 def brute_force(graph):  
     """  
@@ -314,11 +401,12 @@ def brute_force(graph):
                            0, weights)  
   
     return permutations, min(weights)
+    
 ```
 
 #### <ins>Dynamic Programming Algorithm</ins>
 
-Similar to the brute force implementation, the implementation of the dynamic programming follows the the psuedocode closely. As stated in the previous section, the code is based off of a 
+Similar to the brute force implementation, the implementation of the dynamic programming follows the the pseudocode closely. As stated in the previous section, the code is based off of an implementation in java<sup>8</sup>.
 
 ```python
 class dynamic_programming:
@@ -474,24 +562,171 @@ class dynamic_programming:
         :return:
         """
         return ((1 << node) & subset) == 0
+        
 ```
+
 ### <ins>Christofides-Serdyukov Algorithm</ins>
 
+The implementation for the Christofides-Serdyukov algorithm is slightly more involved than the pseudocode from the previous section due to the number of sub algorithms involved. In this code the prim's algorithm was implemented to find the minimum spanning tree. However, to find the minimum perfect matching and the Eulerian circuit the package networkx was used. This package uses the blossom algorithm<sup>13</sup> to find the maximum perfect matching graph. Note the minimum can be found by making all the weights negative and then apply a maximizing function. A linear time algorithm was used to find the Eulerian circuit.  
+
+```python
+from utilities import graph_class
+from utilities import priority_queue
+import networkx as nx
+
+
+def prims_algorithm(graph):
+    """
+    Prim's Algorithm
+    :param graph: graph from graph utilities
+    :return: graph with mst edges
+    """
+
+    # keep set of visited nodes
+    visited = []
+
+    # initialize list to store minimum spanning tree
+    mst_edges = []
+
+    # create priority queue to store edge weights, priority queue will be
+    # ordered by edge weight such that when an element is popped it will
+    # have the lowest value.
+    queue = priority_queue()
+
+    # start at first node in list
+    visited.append(graph.nodes[0])
+
+    # add edges from first node to priority queue
+    for index, weight in enumerate(graph.adjacency_matrix[0]):
+        if weight != 0:
+            queue.insert(weight, graph.nodes[0], graph.nodes[index])
+
+    while not queue.is_empty():
+        # pop minimum weight from priority queue.
+        # note edge is a tuple in the form of
+        # (weight, start node, end node)
+        weight, start_node, end_node = queue.dequeue()
+
+        # if end node (3rd element in tuple) is in visited then skip
+        if end_node in visited:
+            continue
+
+        # visit new node and add minimum edge to the minimum spanning tree
+        # note need to reformat tuple
+        mst_edges.append((start_node, end_node, weight))
+        visited.append(end_node)
+
+        # add edges from new visited node if not visited
+        for index, weight in enumerate(graph.adjacency_matrix[graph.nodes
+                .index(end_node)]):
+            if weight != 0 and graph.nodes[index] not in visited:
+                queue.insert(weight, end_node, graph.nodes[index])
+
+    # create new graph object with mst
+    mst_obj = graph_class(graph.nodes, mst_edges)
+    return mst_obj
+
+
+def find_odd_degree(mst, graph):
+    """
+    Find nodes with odd degrees in a given minimum spanning tree
+    :param mst: minimum spanning tree
+    :param graph: Original fully connected graph
+    :return:
+    """
+    odd_nodes = []
+
+    for row in range(len(mst.nodes)):
+        sum_degrees = 0
+        for col in range(len(mst.nodes)):
+            if mst.adjacency_matrix[row][col] != 0:
+                sum_degrees += 1
+        if sum_degrees % 2 == 1:
+            odd_nodes.append(mst.nodes[row])
+
+    # create sub graph containing only odd nodes, note still need edges
+    # from original graph
+    number_odd_nodes = len(odd_nodes)
+    odd_edges = []
+
+    for i in range(number_odd_nodes):
+        for j in range(i + 1, number_odd_nodes):
+            odd_edges.append((odd_nodes[i], odd_nodes[j], -1 *
+                              graph.get_edge_weight(odd_nodes[i],
+                                                    odd_nodes[j])))
+
+    return graph_class(odd_nodes, odd_edges)
+
+
+def find_minimum_matching_and_eulerian_circuit(mst, graph):
+    """
+    Method to find minimum matching graphs and eulerian tour.
+    This method uses the package networkx.
+    :param mst: minimum spanning tree
+    :param graph: original fully connected graph
+    :return: eurlerian tour
+    """
+    # create networkx graph
+    odd_graph_nx = nx.Graph()
+    odd_subgraph = find_odd_degree(mst, graph)
+    odd_graph_nx.add_weighted_edges_from(odd_subgraph.edges)
+
+    # odd_graph_nx.add_weighted_edges_from(graph.edges)
+
+    matching = list(nx.max_weight_matching(odd_graph_nx,
+                                           maxcardinality=True))
+
+    # add back weight information to the odd matching subgraph
+    weighted_matching = []
+    for pair in matching:
+        weighted_matching.append((pair[0], pair[1],
+                                  graph.get_edge_weight(pair[0], pair[1])))
+
+    # combine with original graph
+    combined_graph = nx.MultiGraph()
+    combined_graph.add_weighted_edges_from(mst.edges)
+
+    combined_graph.add_weighted_edges_from(weighted_matching)
+
+    # use networkx method to find eularian tour
+    eulerian_circuit = list(nx.eulerian_circuit(combined_graph))
+
+    return eulerian_circuit
+
+
+def christofides_serdyukov_algorithm(graph):
+    """
+    Implementation of christofides-serdyukov algorithm
+    :param graph: fully connected graph
+    :return: edges of calculated tour and weight of tour
+    """
+    # use prim's algorithm to find mst of graph
+    mst = prims_algorithm(graph)
+
+    # find minimum matching of odd dgree nodes and eularian tour
+    # note function to get odd degree nodes is called within the function
+    # to find minimum matching and eulerian tour
+    eulerian_circuit = find_minimum_matching_and_eulerian_circuit(mst, graph)
+
+    # get unique node path
+    tsp_tour_node_order = [eulerian_circuit[0][0]]
+    for edge in eulerian_circuit:
+        if edge[1] not in tsp_tour_node_order:
+            tsp_tour_node_order.append(edge[1])
+
+    # get edges and calculate total weight
+    total_weight = 0
+    tsp_tour_edge = []
+    for index in range(len(tsp_tour_node_order)):
+        node_1 = tsp_tour_node_order[index - 1]
+        node_2 = tsp_tour_node_order[index]
+        tsp_tour_edge.append((node_1, node_2))
+        total_weight += graph.get_edge_weight(node_1, node_2)
+    return tsp_tour_edge, total_weight
+    
+```
 
 ## Empirical Results
+j
 
 ## Reflections
-
-Sources
-1 - Discrete math and its application 7th edition, rosen, pg 714
-2 - https://www14.in.tum.de/personen/khan/Arindam%20Khan_files/2.%20metric%20TSP.pdf
-3 - Nonlinear Optimization Bertsekas pg 637.
-4 - Discrete math and its application 7th edition, rosen, pg 715
-5 - https://www.math.uwaterloo.ca/tsp/history/index.html
-6 - https://www.geeksforgeeks.org/proof-that-traveling-salesman-problem-is-np-hard/
-7 - https://cdn.intechopen.com/pdfs/12736/intechtraveling_salesman_problem_an_overview_of_applications_formulations_and_solution_approaches.pdf
-8 - william fisset
-9 - optimal Christofides Serdyukov Algorithm
-10 -[Goodrich, Michael T.](https://en.wikipedia.org/wiki/Michael_T._Goodrich "Michael T. Goodrich"); [Tamassia, Roberto](https://en.wikipedia.org/wiki/Roberto_Tamassia "Roberto Tamassia") (2015), "18.1.2 The Christofides Approximation Algorithm", _Algorithm Design and Applications_, Wiley, pp. 513–514.
-11 - https://iq.opengenus.org/blossom-maximum-matching-algorithm/
-12 - https://leetcode.com/problems/permutations/solutions/2970539/super-simple-brute-force-beats-90-python/?q=brute&orderBy=most_relevant&languageTags=python3
