@@ -43,9 +43,8 @@ The difficulty can be seen through trying to solve this problem using the most n
 *the distance is the same between arrows with the same number of marks*
 
 Therefore, the number of possible tours can be given by the following equation, where $n$ is the number of nodes
-$$
-Total \,\,tours = \frac{(n-1)!}{2}
-$$
+
+$$Total \,\,tours = \frac{(n-1)!}{2}$$
 
 If the $n$ factorial is not convincing enough, substituting numbers shows how much the complexity increases as the number of nodes increases.
 
