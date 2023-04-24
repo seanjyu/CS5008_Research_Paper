@@ -2,9 +2,9 @@
 Research Paper on Algorithms for the Travelling Salesman Problem 
 
 
+## <ins>Problem Definition</ins>
 
-
-The travelling salesman problem can be stated as follows:
+The travelling salesman problem (TSP) can be stated as follows:
 
 *"A traveling salesman wants to visit each of $n$ cities exactly once and return to his starting point. In which order should he visit these cities to travel the minimum total distance?"* <sup>1</sup>
 
@@ -26,7 +26,7 @@ One of the earliest mentions of this problem could be found in a handbook for tr
 
 This problem is important in the theoretical computer science community since it is one of the problems that is proven to be NP-hard. This means that the optimal solution of this problem can be found in polynomial time but only if there exists an NP-Complete solution with polynomial time that the original problem can reduce to. In the case of the travelling salesman problem, the problem can be reduced to finding the optimal Hamiltonian cycle which is in NP Complete.<sup>6</sup>
 
-As for the applications of this problem, the obvious application of this problem would be in optimization the path for a delivery person to take while delivering packages. However these algorithms have also been used to solve optimal placement of components in printed circuit boards such that the wiring between components can be optimized. <sup>7</sup>
+As for the applications of this problem, the obvious application of this problem would be in optimization the path for a delivery person to take while delivering packages. These algorithms have also been used to solve optimal placement of components in printed circuit boards such that the wiring between components can be optimized.<sup>7</sup>
 
 
 ## Implementation and Analysis of Algorithms
@@ -71,7 +71,7 @@ Algorithm: Brute Force
 Input: Fully Connected Graph
 Output: Minimum Tour and cost of tour
 
-F(graph)
+F(graph):
 	# from graph obtain nodes
 	nodes = graph.nodes_list
 	
@@ -96,12 +96,15 @@ To paraphrase the method behind this algorithm is to find every single permutati
 
 #### <ins>Dynamic Programming Algorithm</ins>
 
-In this algorithm while creating the permutations the subgraph formed by the partial tour is saved such that they don't need to be traversed again. When exploring a new node two pieces of data is required to index the memoized data: the set of visited nodes and the index of the last visited node which represents the order. From this we can calculate the space complexity, which is $\mathcal{O}(n2^{n})$. This number represents the size of the matrix need to store the number of subproblems, which in this case is the weight of the subpaths and the final path. This number is derived from the fact that  each tour has to visit $n$ nodes and there are $2^{n}$ possible subsets. One way to understand the $2^{n}$ is by imagining representing the subset of selected nodes as a binary numeral, where 0 denotes the unvisited nodes and 1 denotes the visited ones. This concept is important to understand as it is the basis of the implementation. The time complexity is $\mathcal{O}(n^{2}2^{n})$ since each subproblem takes linear time to solve. It must be said that this implementation is heavily influenced by 
+In this algorithm while creating the permutations the subgraph formed by the partial tour is saved such that they don't need to be traversed again. When exploring a new node two pieces of data is required to index the memoized data: the set of visited nodes and the index of the last visited node which represents the order. From this we can calculate the space complexity, which is $\mathcal{O}(n2^{n})$. This number represents the size of the matrix need to store the number of subproblems, which in this case is the weight of the subgraphs, and the final path. This number is derived from the fact that  each tour has to visit $n$ nodes and there are $2^{n}$ possible subsets. One way to understand the $2^{n}$ is by imagining representing the subset of selected nodes as a binary numeral, where 0 denotes the unvisited nodes and 1 denotes the visited ones. This concept is important to understand as it is the basis of the implementation. 
+
+The time complexity is $\mathcal{O}(n^{2}2^{n})$ since each subproblem takes linear time to solve. The subproblem being finding the optimal node to traverse to. To summarize this method, bit representation is used represent the subgraph which makes it easier to store the data and traverse through the graph. The memoization helps store weight data so that it does not need to be calculated again.
 
 ```text
 Algorithm: Dynammic Programming
 Input: Fully Connected Graph
 Output: Minimum Tour and cost of tour
+
 F(graph):
 	# note start node is assumed to be the first node in list
 	start = graph.nodes_list[0]
@@ -109,7 +112,8 @@ F(graph):
 	# get graph lenght from adjacency matrix (or length of nodes list)
 	length = size(graph.adjacency_matrix)
 
-	# initialize 2D matrix for memoization
+	# initialize 2D matrix for memoization, first dimension is number of 
+	  nodes and second dimension is the binary representation of the state.
 	store = matrix[length][2^length]
 
 	# update store for first node
@@ -120,14 +124,15 @@ F(graph):
 
 	# solve for min cost using memoized data and find optimal tour
 	cost = find_min_cost()
-	tour = find_tour
+	tour = find_min_tour()
 
 	# store starting data in matrix
 	def update_store(graph, store, length)
 		for i in range(node):
-			if node = start: 
+			if node == start: 
 				continue
-			store[i][binary representation*] = graph.get_weights[start, node]
+			# note second dimension is a binary representation
+			store[i][1 << start | 1 << i] = graph.get_weights[start, node]
 	
 	def solve_subproblem(graph, store, length)
 		# Note loop starts from 3 since first edge considers 2 nodes, so the
@@ -142,32 +147,101 @@ F(graph):
 				# consider all nodes 	
 				for next in all nodes:
 					# skip of next is the start node or next is not in subset
-					if next = start or next not in subset:
+					if next == start or next not in subset:
 						continue
 					# need to find best state using memoized data
 					  so first take away next from subset using bit
-					  manupulation
-					state = subset - next 
-				
+					  manupulation, also intialize variable for min distance
+					state = subset ^ (1 << next)
+					min_distance = +inf
+					# loop through 
+					for end in all nodes:
+						# skip if not under following conditions
+						if end == start or end == next or end not in subset
+							contine
+						# calculate distance if node 'end' is added use 
+						  stored data
+						new_distance = store[end][next] + graph.get_weights[end, next]
+						# check if need to replace min distance
+						if new_distance < min_distance
+							min_distance = new_distance
+						
+	 def combinations(r, N)
+		 # This can be one using recursive function
+		return every combination state from r to N
+
 	def find_min_cost(graph, store, length)
+		# note end state is always the binary representation with all ones 
+		  since every node is visited
+		end_state = (1 << N) - 1
+		min_tour_cost = +inf
+		# loop through stored array for tours with end state and find minimum
+		for node in all nodes
+			# skip if node is start since that entry is 0
+			if node == start:
+				continue
+			# need to add the weight from end to start
+			tour_cost = store[node][end_state] + graph.get_weights[end, start]
+			# replace min_tour_cost if smaller
+			if tour_cost < min_tour_cost 
+				min_tour_cost = tour_cost
+				
+		return min_tour_cost
 		
 	def find_tour(graph, store, length)
-
-	def combinations(r, N)
-		return every combination state from r to N
-	
+		# start from initial node and end state, note these variables will change as we traverse backwards
+		prev_node = graph[0]
+		state = (1 << N) - 1
+		# define tour to be empty array or array of size number of nodes
+		tour = [] 
+		for i in range(nodes list)
+			# need to traverse backwards from state
+			index = -1
+			for j in range(nodes list)
+				if j == start or j not in subgraph:
+					continue
+				# check if there is a better a better index than previous, if there is then use that node
+				prev_dist = store[index][state] + graph.get_weights[index, prev_node]
+				new_dist = store[j][state] + graph.get_weights[j, prev_node]
+				if new_dist < prev_dist
+					index = j
+			# add to tour
+			tour.append(index)
+			# change state
+			state = state ^ (1 << index)
+			prev_node = index
+				
+			
+		# add first node to the end since need to start and finish on first node
+		tour.append(graph[0])
+		return tour
 ```
 
+This implementation is based off existing code by William Fisset <sup>9</sup>. However, the original code was written in java and various adaptions were made to accommodate the utility functions. Out of all the algorithms implemented, this one was the most complicated since it relies on bit manipulation to store the data and achieve a better time and space complexity than the brute force solution. 
 
 ### <ins>Christofides-Serdyukov Algorithm</ins>
+
+This algorithm is the only approximate algorithm considered. Meaning that the solution is not necessarily optimal. However, the tradeoff for accuracy is the speed at which a good tour can be found. According to literature the error ratio, which is the minimum cost found by this algorithm divided by the true optimal cost, has an upper bound of 1.5<sup>9</sup>.  However, this also relies on the optimality of the sub algorithms involved.
+
+This algorithm makes use of the similarity of the minimum spanning tree and the optimal tour. The minimum spanning tree (MST) is a set of edges with the minimum weight that can connect all nodes in a graph. The difference between a tree and a tour is that a tree cannot have any cycles. Therefore, if the MST was a line adding a single edge to a MST and it would become the minimum tour. However, in a lot of cases it is not that simple. The issue is that in a minimum spanning tree there maybe a lot of nodes with an odd number of edges. On the other hand, in a tour all nodes have an even number of vertices since each node can only be visited once. 
+
+The Christofides-Serdyukov algorithm<sup>10</sup> solves this by first finding the minimum spanning tree, then grouping all the odd degree nodes in a subgraph. Since the original graph is fully connected, the weights between all the odd degrees are known. A minimum weight perfect matching algorithm can be applied to the subgraph. The perfect matching means that each node will have one edge but the whole graph will have an even number of edges as proved by the handshake lemma. These edges are added back to the minimum spanning tree resulting in each vertex having an even degree. Because of this, an Eulerian tour algorithm can be applied to the graph. An Eulerian tour can be defined as a tour in which a path in which every node is visited exactly once. In this case because the basis of the tour is a MST the total cost is generally lower and in some cases the optimal tour can be found. 
+
+The complexity of this algorithm is derived from the implementations of the subalgorithms. Namely, the algorithm used to find the MST, the algorithm to perform the minimum weight perfect matching and the algorithm to find the Eulerian tour. 
+
+For example, if Prim's algorithm was used to find the minimum spanning tree,
 
 ```text
 Algorithm: Christofides-Serdyukov
 Input: Fully Connected Graph
 Output: Minimum Tour and cost of tour
+F(graph):
+	
 ```
 
 ## Code Implementation
+
+## Empirical Results
 
 ## Reflections
 
@@ -179,4 +253,6 @@ Sources
 5 - https://www.math.uwaterloo.ca/tsp/history/index.html
 6 - https://www.geeksforgeeks.org/proof-that-traveling-salesman-problem-is-np-hard/
 7 - https://cdn.intechopen.com/pdfs/12736/intechtraveling_salesman_problem_an_overview_of_applications_formulations_and_solution_approaches.pdf
-
+8 - william fisset
+9 - optimal Christofides Serdyukov Algorithm
+10 -[Goodrich, Michael T.](https://en.wikipedia.org/wiki/Michael_T._Goodrich "Michael T. Goodrich"); [Tamassia, Roberto](https://en.wikipedia.org/wiki/Roberto_Tamassia "Roberto Tamassia") (2015), "18.1.2 The Christofides Approximation Algorithm", _Algorithm Design and Applications_, Wiley, pp. 513–514.

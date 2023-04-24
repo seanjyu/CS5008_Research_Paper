@@ -90,24 +90,28 @@ class dynamic_programming:
         self.min_tour.append(0)
         prev_node = 0
         state = end_state
-        for i in range(self.length):
+        for i in range(self.length - 1, 0, -1):
             optimal_node = -1
             optimal_dist = sys.maxsize
             for j in range(self.length):
                 if self.bit_not_in(j, state):
                     continue
                 # calculate distance
+                if optimal_node == -1:
+                    optimal_node = j
+                prev_distance = memo[optimal_node][state] \
+                                + self.adjacency_matrix[optimal_node][
+                                    prev_node]
                 new_distance = memo[j][state] \
                                + self.adjacency_matrix[j][prev_node]
-
-                if new_distance < optimal_dist:
+                if new_distance < prev_distance:
                     optimal_node = j
-                    optimal_dist = new_distance
 
             self.min_tour.append(optimal_node)
             state = state ^ (1 << optimal_node)
             prev_node = optimal_node
 
+        # append first node at end since need to start and end on same node
         self.min_tour.append(0)
         self.run_solver = True
 
