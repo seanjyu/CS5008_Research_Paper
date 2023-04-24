@@ -92,7 +92,7 @@ def find_odd_degree(mst, graph):
     return graph_class(odd_nodes, odd_edges)
 
 
-def find_minimum_matching_and_eulerian_tour(mst, graph):
+def find_minimum_matching_and_eulerian_circuit(mst, graph):
     """
     Method to find minimum matching graphs and eulerian tour.
     This method uses the package networkx.
@@ -123,9 +123,9 @@ def find_minimum_matching_and_eulerian_tour(mst, graph):
     combined_graph.add_weighted_edges_from(weighted_matching)
 
     # use networkx method to find eularian tour
-    eulerian_tour = list(nx.eulerian_circuit(combined_graph))
+    eulerian_circuit = list(nx.eulerian_circuit(combined_graph))
 
-    return eulerian_tour
+    return eulerian_circuit
 
 
 def christofides_serdyukov_algorithm(graph):
@@ -137,12 +137,14 @@ def christofides_serdyukov_algorithm(graph):
     # use prim's algorithm to find mst of graph
     mst = prims_algorithm(graph)
 
-    # find minimum matching and eularian tour
-    eulerian_tour = find_minimum_matching_and_eulerian_tour(mst, graph)
+    # find minimum matching of odd dgree nodes and eularian tour
+    # note function to get odd degree nodes is called within the function
+    # to find minimum matching and eulerian tour
+    eulerian_circuit = find_minimum_matching_and_eulerian_circuit(mst, graph)
 
     # get unique node path
-    tsp_tour_node_order = [eulerian_tour[0][0]]
-    for edge in eulerian_tour:
+    tsp_tour_node_order = [eulerian_circuit[0][0]]
+    for edge in eulerian_circuit:
         if edge[1] not in tsp_tour_node_order:
             tsp_tour_node_order.append(edge[1])
 
