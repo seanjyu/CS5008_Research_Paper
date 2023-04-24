@@ -1,7 +1,7 @@
 # CS5008_Research_Paper
 Research Paper on Algorithms for the Travelling Salesman Problem 
 
-
+## <ins>Problem Definition</ins>
 
 The travelling salesman problem (TSP) can be stated as follows:
 
@@ -37,6 +37,8 @@ In this report three algorithms were implemented. Namely, the brute force algori
 <ins>Understanding the Complexity of the problem</ins>
 
 The difficulty can be seen through trying to solve this problem using the most naïve algorithm which the brute force method where every tour is considered.  The total possible tours can be understood by finding the number of unique permutations of ordering the nodes and then dividing by two. This is because a permutation represents the order in which the nodes can be visited and this number is divided by 2 since reversing the order will return a tour with the same cost. This is illustrated in the picture below.
+
+![reverse_graph](images/reverse.jpg)
 
 *the distance is the same between arrows with the same number of marks*
 
@@ -225,7 +227,7 @@ This algorithm is the only approximate algorithm considered. Meaning that the so
 
 This algorithm makes use of the similarity of the minimum spanning tree and the optimal tour. The minimum spanning tree (MST) is a set of edges with the minimum weight that can connect all nodes in a graph. The difference between a tree and a tour is that a tree cannot have any cycles. Therefore, if the MST was a line adding a single edge to a MST and it would become the minimum tour. However, in a lot of cases it is not that simple. The issue is that in a minimum spanning tree there maybe a lot of nodes with an odd number of edges. On the other hand, in a tour all nodes have an even number of edges since each node can only be visited once.
 
-The Christofides-Serdyukov algorithm<sup>10</sup> solves this by first finding the minimum spanning tree, then grouping all the odd degree nodes in a subgraph. Since the original graph is fully connected, the weights between all the odd degrees are known. A minimum weight perfect matching algorithm can be applied to the subgraph. The perfect matching means that each node will have one edge but the whole graph will have an even number of edges as proved by the handshake lemma. These edges are added back to the minimum spanning tree resulting in each node having an even degree. Note this resulting graph is a multi graph since the result from the perfect matching could include edges from the minimum spanning tree. An Eulerian tour algorithm can be applied to the graph since it has an even number of edges at each node. An Eulerian circuit is a path in which every edge is visited exactly once. However, in the TSP requires that each edge can only be used once. Therefore to convert the Eulerian circuit to a tour, the circuit is traversed and if a node has already been visited, then a new edge is created. Because the basis of the tour is a MST the total cost is generally lower and in some cases the optimal tour can be found. 
+The Christofides-Serdyukov algorithm<sup>10</sup> solves this by first finding the minimum spanning tree, then grouping all the odd degree nodes in a subgraph. Since the original graph is fully connected, the weights between all the odd degrees are known. A minimum weight perfect matching algorithm can be applied to the subgraph. The perfect matching means that each node will have one edge but the whole graph will have an even number of edges by the handshake lemma. These edges are added back to the minimum spanning tree resulting in each node having an even degree. Note this resulting graph is a multi graph since the result from the perfect matching could include edges from the minimum spanning tree. An Eulerian tour algorithm can be applied to the graph since it has an even number of edges at each node. An Eulerian circuit is a path in which every edge is visited exactly once. However, in the TSP requires that each edge can only be used once. Therefore to convert the Eulerian circuit to a tour, the circuit is traversed and if a node has already been visited, then a new edge is created. Because the basis of the tour is a MST the total cost is generally lower and in some cases the optimal tour can be found. 
 
 The complexity of this algorithm is derived from the implementations of the sub algorithms. Namely, the algorithm used to find the MST, the algorithm to perform the minimum weight perfect matching and the algorithm to find the Eulerian tour. However, typically the matching algorithm has the highest time complexity. For example, the blossom algorithm has a complexity of $\mathcal{O}(En^{2})$ where $E$ is the number of edges and a space complexity of $\mathcal{O}(n^{2})$.<sup>11</sup> 
 
@@ -727,6 +729,88 @@ def christofides_serdyukov_algorithm(graph):
 ```
 
 ## Empirical Results
-j
 
-## Reflections
+Test were performed on fully connected graphs with randomly generated weight values. The function used to create the graphs is shown below.
+
+```python
+
+def generate_graph(n):
+    """
+    Function to create fully connected graph object
+    :param n: number of nodes in graph
+    :return: graph object
+    """
+    # Generate nodes
+    nodes = [i for i in range(n)]
+
+    # create edges and assign random weights
+    edges = []
+    for i in range(n):
+        for j in range(i + 1, n):
+            edges.append((i, j, random.randint(1, 2 * n)))
+
+    # return graph
+    return graph_class(nodes, edges)
+
+
+```
+
+
+### Run Time Comparison
+
+The run times across several graph sizes for all three algorithms were collected. The results are as shown below. 
+![all_algo_comparison](images/all_algorithm_comparison.PNG)
+
+The chart shows how much time the brute force algorithm takes when compared to the other two. To give specific numbers, for graph with 8 nodes, the brute force algorithm required 19 seconds, whereas the dynamic programming and the Chrsitofdes-Seryukov algorithms only requires around a hundredth of a second. 
+
+Another chart was produced to compare only the dynamic programming and Chrsitofides-Seryukov algorithm. 
+
+![dp_vs_christofides](images/dp_vs_christofides_chart.png)
+
+This chart shows that the Christofides-Seryukov algorithm is the fastest out of the three algorithms, which was to be expected from the time complexities. Also the space complexity for the dynamic programming could also contribute to the lack of speed at higher node values.
+
+A chart was also produced to see how the Christofides-Serdyukov algorithm would perform on larger graphs.
+
+![christofides_](images/christofides_graph.png)
+The largest graph tested had 200 nodes but the peak time was still only 2.16 seconds.
+
+### Error Ratio
+The error ratio for the Christofides-Serdyukov algorithm was also tested. The optimal cost was found using the dynamic progaming algorithm. However, this limited the graphs to a maximum of 20 nodes since after that the dynamic programming algorithm would take too long. 
+
+![error_ratio](images/error_ratio_c.png)
+Although the theoretical upper bound for the error ratio is supposedly  1.5 there were a few in the experiments that crossed this threshold. I suspect this is due to the maximize perfect matching algorithm as this problem is quite difficult to solve. Another factor could be which node on  the Eulerian circuit does the program start on when finding the tour. The implementation always took the first node however it could be possible starting on a different node could yield a lower cost solution. 
+
+## Reflections and Conclusion
+
+Overall, from a time complexity standpoint the experiments showed what was expected. However, there is some issue in the implementation for the
+Christofides-Serdyukov as the error seems to be higher than expected. 
+
+Through this project I learnt a lot about the travelling salesman problem. I initially chose this problem because I was interested in understanding more about complexity and NP hardness. Having implemented different algorithms with varying complexities but also varying angles of solving the same problem I think I have a better understanding of NP and P. I was also able to use many different data structures in this project, from binary representations to priority queues. Although I believe some parts of this project was rushed I still learnt a lot and will definitely revisit this topic again in the future.
+
+## Sources
+1 - Rosen, Kenneth. _Discrete Mathematics and Its Applications_, 7th ed., pp. 714.
+
+2 -Arindam Khan, *Traveling Salesman Problem* notes , https://www14.in.tum.de/personen/khan/Arindam%20Khan_files/2.%20metric%20TSP.pdf
+
+3 - Dimitri, Bertsekas, *Nonlinear Optimization*, 2nd ed., pp. 637
+
+4 - Rosen, Kenneth. _Discrete Mathematics and Its Applications_, 7th ed., pp. 714.
+
+5 - “History of the TSP.” _TSP History Home_, https://www.math.uwaterloo.ca/tsp/history/index.html.
+
+6 - "Proof that traveling-salesman-problem is np hard", https://www.geeksforgeeks.org/proof-that-traveling-salesman-problem-is-np-hard/
+
+7 - Matai, Rajesh, et al. “Traveling Salesman Problem: An Overview of Applications, Formulations, and Solution Approaches.” _Traveling Salesman Problem, Theory and Applications_, 2010, https://doi.org/10.5772/12909.
+
+8 - William Fisset, *Dynamic programming Travelling Salesman Problem Algorithm in Java*, https://github.com/williamfiset/Algorithms/blob/master/src/main/java/com/williamfiset/algorithms/graphtheory/TspDynamicProgrammingIterative.java
+
+9 - Christofides, Nicos. “Worst-Case Analysis of a New Heuristic for the Travelling Salesman Problem.” _Operations Research Forum_, vol. 3, no. 1, 2022, https://doi.org/10.1007/s43069-021-00101-z.
+
+10 - Goodrich, Michael T et al, "18.1.2 The Christofides Approximation Algorithm", _Algorithm Design and Applications_, Wiley, pp. 513–514.
+11 - *"Blossom Maximum Matching Algorithm"*, https://iq.opengenus.org/blossom-maximum-matching-algorithm/
+
+12 - chienhsiang-hung, Leetcode 46 Solution https://leetcode.com/problems/permutations/solutions/2970539/super-simple-brute-force-beats-90-python/?q=brute&orderBy=most_relevant&languageTags=python3
+
+13 - Networkx max_weight_matching source code, https://networkx.org/documentation/stable/_modules/networkx/algorithms/matching.html#max_weight_matching
+
+14 - Networkx eulerian_circuit documentation source code, https://networkx.org/documentation/stable/_modules/networkx/algorithms/euler.html#eulerian_circuit
